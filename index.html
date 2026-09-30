@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex WOS — Enterprise Cloud-Based Warehouse Operating System</title>
+    <meta name="description" content="Cloud-Based Warehouse Operating System with First-Class RBAC, Cryptographic Audit Trails, Smart Put-Away, Wave Picking, Dispatch Manifests, and Multi-Tenant SaaS Subscriptions.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- TOP ENTERPRISE HEADER -->
+    <header class="app-header">
+        <div class="brand-wrapper">
+            <div class="brand-icon-box">⚡</div>
+            <div>
+                <div class="brand-title">Apex WOS</div>
+                <div class="brand-sub">Warehouse Operating System</div>
+            </div>
+        </div>
+
+        <div class="header-telemetry">
+            <!-- Cryptographic Tamper-Resistant Security Seal -->
+            <div class="security-seal-badge" title="Cryptographically chained audit trail using SHA-256 block hashing. Records are write-only.">
+                <span class="security-dot"></span>
+                <span>TAMPER-RESISTANT LEDGER</span>
+            </div>
+
+            <!-- Supabase Cloud Connection Telemetry -->
+            <div class="supabase-status-pill" id="supabase-header-pill" onclick="WOS_UI.openSupabaseModal()" title="Click to view Supabase Cloud Database Connection, Live Sync & Schema">
+                <span class="supabase-dot"></span>
+                <span id="supabase-status-text">SUPABASE: CLOUD READY</span>
+            </div>
+
+            <!-- Active Warehouse Selector -->
+            <div class="header-wh-selector" title="Switch active warehouse facility">
+                <span class="text-xs text-muted">Facility:</span>
+                <select id="warehouse-quick-switcher" onchange="WOS_UI.switchActiveWarehouse(this.value)">
+                    <option value="WH-LOS-01">Apex Ikeja Mega-Warehouse (Lagos)</option>
+                    <option value="WH-LOS-02">Apapa Cold-Chain Reefer (Lagos)</option>
+                    <option value="WH-ABJ-01">Idu Central Depot (Abuja)</option>
+                    <option value="WH-PHC-01">Delta Industrial Depot (Port Harcourt)</option>
+                </select>
+            </div>
+
+            <!-- Quick Barcode Scanner Button -->
+            <button class="btn btn-sm btn-outline" onclick="WOS_UI.openBarcodeModal()" title="Launch Handheld / Camera Barcode Scanner">
+                📷 Barcode Scanner
+            </button>
+
+            <!-- Operator Persona Switcher (RBAC Simulator) -->
+            <div class="persona-switch-widget" title="Simulate different role authorizations (Officer, Supervisor, Admin)">
+                <div class="user-avatar-pill" id="header-user-avatar">TA</div>
+                <div class="persona-meta">
+                    <div class="persona-name" id="header-user-name">Tunde Adeyemi</div>
+                    <div class="persona-limit" id="header-approval-limit">Approval: ₦0</div>
+                </div>
+                <select class="select select-sm ml-2" id="persona-quick-switcher" onchange="WOS_UI.switchPersona(this.value)">
+                    <option value="USR-001">👤 Tunde (Warehouse Officer)</option>
+                    <option value="USR-002">⭐ Sarah (Supervisor - Limit ₦1M)</option>
+                    <option value="USR-003">👔 Marcus (Ops Manager - Limit ₦5M)</option>
+                    <option value="USR-004">🛡️ Elena (System Administrator)</option>
+                    <option value="USR-005">💰 David (Finance & Billing)</option>
+                </select>
+                <span id="header-role-badge" class="badge badge-emerald">OFFICER</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN SHELL: SIDEBAR + CONTENT VIEW -->
+    <div class="app-layout">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="app-sidebar">
+            <!-- Prominent Active Persona Card -->
+            <div class="sidebar-persona-card">
+                <div class="sidebar-persona-header">
+                    <div class="sidebar-persona-avatar" id="sidebar-user-avatar">TA</div>
+                    <div>
+                        <div class="sidebar-persona-name" id="sidebar-user-name">Tunde Adeyemi</div>
+                        <div class="sidebar-persona-role" id="sidebar-user-role">Warehouse Officer</div>
+                    </div>
+                </div>
+                <div class="text-xs text-muted mb-2" id="sidebar-user-limit">Approval Limit: ₦0</div>
+                <label class="label text-xs text-slate-300 mb-1">Switch Role / Persona:</label>
+                <select class="sidebar-persona-select" id="sidebar-persona-switcher" onchange="WOS_UI.switchPersona(this.value)">
+                    <option value="USR-001">👤 Tunde (Officer - Floor)</option>
+                    <option value="USR-002">⭐ Sarah (Supervisor - Limit ₦1M)</option>
+                    <option value="USR-003">👔 Marcus (Ops Mgr - Limit ₦5M)</option>
+                    <option value="USR-004">🛡️ Elena (System Admin)</option>
+                    <option value="USR-005">💰 David (Finance & Billing)</option>
+                </select>
+            </div>
+
+            <div class="nav-group-title">Organization & Topology</div>
+            <ul class="nav-list">
+                <li class="nav-item" data-tab="company" onclick="WOS_UI.switchTab('company')">
+                    <span class="nav-icon">🏢</span> Company Setup
+                </li>
+                <li class="nav-item" data-tab="branches" onclick="WOS_UI.switchTab('branches')">
+                    <span class="nav-icon">🌿</span> Branches
+                </li>
+                <li class="nav-item" data-tab="warehouses" onclick="WOS_UI.switchTab('warehouses')">
+                    <span class="nav-icon">🏭</span> Warehouses & Bins
+                </li>
+            </ul>
+
+            <div class="nav-group-title">Identity & Governance</div>
+            <ul class="nav-list">
+                <li class="nav-item" data-tab="users" onclick="WOS_UI.switchTab('users')">
+                    <span class="nav-icon">👥</span> Users Directory
+                </li>
+                <li class="nav-item" data-tab="roles" onclick="WOS_UI.switchTab('roles')">
+                    <span class="nav-icon">🛡️</span> Roles & RBAC Matrix
+                </li>
+            </ul>
+
+            <div class="nav-group-title">Inventory Operations</div>
+            <ul class="nav-list">
+                <li class="nav-item active" data-tab="inventory" onclick="WOS_UI.switchTab('inventory')">
+                    <span class="nav-icon">📊</span> Stock Balances & SoD
+                </li>
+            </ul>
+
+            <div class="nav-group-title">Inbound Workflows</div>
+            <ul class="nav-list">
+                <li class="nav-item" data-tab="receiving" onclick="WOS_UI.switchTab('receiving')">
+                    <span class="nav-icon">📥</span> Inbound Receiving
+                </li>
+                <li class="nav-item" data-tab="putaway" onclick="WOS_UI.switchTab('putaway')">
+                    <span class="nav-icon">📦</span> Smart Put-Away
+                </li>
+            </ul>
+
+            <div class="nav-group-title">Outbound Workflows</div>
+            <ul class="nav-list">
+                <li class="nav-item" data-tab="picking" onclick="WOS_UI.switchTab('picking')">
+                    <span class="nav-icon">📋</span> Wave Picking
+                </li>
+                <li class="nav-item" data-tab="dispatch" onclick="WOS_UI.switchTab('dispatch')">
+                    <span class="nav-icon">🚚</span> Packing & Dispatch
+                </li>
+                <li class="nav-item" data-tab="returns" onclick="WOS_UI.switchTab('returns')">
+                    <span class="nav-icon">🔄</span> Returns & Reverse Log.
+                </li>
+            </ul>
+
+            <div class="nav-group-title">Compliance & SaaS</div>
+            <ul class="nav-list">
+                <li class="nav-item" data-tab="audit" onclick="WOS_UI.switchTab('audit')">
+                    <span class="nav-icon">🔒</span> Immutable Audit Trail
+                </li>
+                <li class="nav-item" data-tab="billing" onclick="WOS_UI.switchTab('billing')">
+                    <span class="nav-icon">💳</span> SaaS Subscriptions
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-xs btn-outline btn-block" onclick="WOS_UI.resetDemoData()" title="Reset all inventory and transactions to seed defaults">
+                    🔄 Reset Enterprise Demo Data
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN OPERATIONAL WORKSPACE -->
+        <main class="app-main">
+            <!-- Prominent Global Persona Switcher Bar (Always Visible) -->
+            <div class="persona-global-bar">
+                <div class="persona-bar-header">
+                    <span class="persona-label-tag">🎭 Operator Persona Simulator:</span>
+                    <div class="persona-button-group">
+                        <button class="persona-btn active" data-persona="USR-001" onclick="WOS_UI.switchPersona('USR-001')" title="Floor operator: Can receive, put-away, pick, but blocked from approving adjustments">
+                            <span class="persona-dot emerald"></span> 👤 Tunde (Officer)
+                        </button>
+                        <button class="persona-btn" data-persona="USR-002" onclick="WOS_UI.switchPersona('USR-002')" title="Shift supervisor: Can approve adjustments up to ₦1M and clear dispatches">
+                            <span class="persona-dot amber"></span> ⭐ Sarah (Supervisor)
+                        </button>
+                        <button class="persona-btn" data-persona="USR-003" onclick="WOS_UI.switchPersona('USR-003')" title="Operations Manager: High-level authority up to ₦5M">
+                            <span class="persona-dot indigo"></span> 👔 Marcus (Ops Mgr)
+                        </button>
+                        <button class="persona-btn" data-persona="USR-004" onclick="WOS_UI.switchPersona('USR-004')" title="System Administrator: Can manage users, but strictly blocked from deleting audit logs">
+                            <span class="persona-dot rose"></span> 🛡️ Elena (Admin)
+                        </button>
+                        <button class="persona-btn" data-persona="USR-005" onclick="WOS_UI.switchPersona('USR-005')" title="Finance Controller: Manages SaaS subscription tiers & billing">
+                            <span class="persona-dot sky"></span> 💰 David (Finance)
+                        </button>
+                    </div>
+                </div>
+                <div class="persona-privilege-explainer" id="persona-privilege-explainer">
+                    Active Persona: <strong>Tunde Adeyemi (Warehouse Officer)</strong> — Floor Execution: Inbound receiving, smart put-away, wave picking. <span class="text-rose-600 font-bold">Blocked: Stock adjustment approvals (Approval Limit: ₦0), System Admin.</span>
+                </div>
+            </div>
+
+            <!-- MODULE 1: COMPANY -->
+            <section id="view-company" class="module-view"></section>
+
+            <!-- MODULE 2: BRANCHES -->
+            <section id="view-branches" class="module-view"></section>
+
+            <!-- MODULE 3: WAREHOUSES & BINS -->
+            <section id="view-warehouses" class="module-view"></section>
+
+            <!-- MODULE 4: USERS -->
+            <section id="view-users" class="module-view"></section>
+
+            <!-- MODULE 5: ROLES & RBAC -->
+            <section id="view-roles" class="module-view"></section>
+
+            <!-- MODULE 6: INVENTORY & BALANCES (DEFAULT) -->
+            <section id="view-inventory" class="module-view active"></section>
+
+            <!-- MODULE 7: RECEIVING -->
+            <section id="view-receiving" class="module-view"></section>
+
+            <!-- MODULE 8: PUT-AWAY -->
+            <section id="view-putaway" class="module-view"></section>
+
+            <!-- MODULE 9: PICKING -->
+            <section id="view-picking" class="module-view"></section>
+
+            <!-- MODULE 10: DISPATCH -->
+            <section id="view-dispatch" class="module-view"></section>
+
+            <!-- MODULE 11: RETURNS -->
+            <section id="view-returns" class="module-view"></section>
+
+            <!-- MODULE 12: AUDIT & REPORTS -->
+            <section id="view-audit" class="module-view"></section>
+
+            <!-- MODULE 13: SAAS BILLING -->
+            <section id="view-billing" class="module-view"></section>
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- ===================================================================== -->
+    <!-- APPLICATION MODALS -->
+    <!-- ===================================================================== -->
+
+    <!-- MODAL: BARCODE SCANNER SIMULATOR -->
+    <div id="modal-barcode" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">📷 Handheld Barcode & QR Scanner</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-barcode')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-xs text-muted mb-4">
+                    Simulate scanning physical warehouse barcodes or bin rack tags with a handheld terminal.
+                </p>
+                <div class="mb-4">
+                    <label class="label">Enter Barcode / SKU / Bin ID manually:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="manual-barcode-input" class="input" placeholder="e.g. 789102938401 or WH01-AMB-A01-R01-S01-B01">
+                        <button class="btn btn-primary" onclick="WOS_UI.handleBarcodeSimulation(document.getElementById('manual-barcode-input').value)">
+                            Scan
+                        </button>
+                    </div>
+                </div>
+
+                <label class="label">Or quick-tap sample warehouse tags:</label>
+                <div class="flex flex-col gap-2">
+                    <button class="btn btn-outline text-left" onclick="WOS_UI.handleBarcodeSimulation('789102938401')">
+                        📦 <strong>789102938401</strong> — SolarEdge Hybrid Inverter 5KVA
+                    </button>
+                    <button class="btn btn-outline text-left" onclick="WOS_UI.handleBarcodeSimulation('789102938403')">
+                        ❄️ <strong>789102938403</strong> — Cold-Chain Vaccine Lot-X (Cold Zone)
+                    </button>
+                    <button class="btn btn-outline text-left" onclick="WOS_UI.handleBarcodeSimulation('789102938402')">
+                        ⚠️ <strong>789102938402</strong> — Lithium Battery 3.5kWh (Hazmat Zone)
+                    </button>
+                    <button class="btn btn-outline text-left" onclick="WOS_UI.handleBarcodeSimulation('WH01-AMB-A01-R01-S01-B01')">
+                        🏷️ <strong>WH01-AMB-A01-R01-S01-B01</strong> — Storage Bin Address
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-barcode')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BIN INSPECTOR -->
+    <div id="modal-bin-inspector" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Storage Bin Inspector: <span id="modal-bin-id" class="text-indigo-600 font-mono"></span></div>
+                    <span class="text-xs text-muted">Zone: <strong id="modal-bin-zone"></strong> • Fill: <strong id="modal-bin-occupancy"></strong></span>
+                </div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-bin-inspector')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Available</th>
+                            <th>Reserved</th>
+                            <th>Damaged</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-bin-items-tbody"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-bin-inspector')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: STOCK ADJUSTMENT REQUEST -->
+    <div id="modal-adjustment-request" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">⚖️ Raise Physical Count Stock Adjustment</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-adjustment-request')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning mb-4">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="text-xs">
+                        <strong>Separation of Duties (SoD) Active:</strong>
+                        This request will be sent to the Warehouse Supervisor for authorization. 
+                        As requester, you will be strictly prevented from approving this adjustment yourself.
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Product SKU</label>
+                    <input type="text" id="adj-sku" class="input" placeholder="e.g. SKU-SOLAR-INV-5KW">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Storage Bin Location</label>
+                    <input type="text" id="adj-location" class="input" placeholder="e.g. WH01-AMB-A01-R01-S01-B01">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Actual Physical Count Verified</label>
+                    <input type="number" id="adj-physical-count" class="input" placeholder="e.g. 42">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Reason Code</label>
+                    <select id="adj-reason" class="select">
+                        <option value="Physical count discrepancy">Physical count discrepancy</option>
+                        <option value="Damaged goods discovered">Damaged goods discovered</option>
+                        <option value="Expired inventory removal">Expired inventory removal</option>
+                        <option value="Data entry correction">Data entry correction</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Evidence / Discrepancy Notes</label>
+                    <textarea id="adj-notes" class="input" rows="3" placeholder="Provide detail of broken seal, moisture damage, or count verification..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-adjustment-request')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitAdjustmentRequest()">Submit for Supervisor Approval</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE INBOUND PURCHASE ORDER -->
+    <div id="modal-create-po" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">📥 Create Inbound Purchase Order (PO)</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-create-po')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="label">Supplier / Vendor Name</label>
+                    <input type="text" id="po-supplier" class="input" placeholder="e.g. Siemens Energy Distribution">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Product SKU</label>
+                    <select id="po-item-sku" class="select">
+                        <option value="SKU-SOLAR-INV-5KW">SolarEdge Hybrid Inverter 5KVA</option>
+                        <option value="SKU-LITH-BAT-48V">Pylontech Lithium Battery 3.5kWh</option>
+                        <option value="SKU-PHARM-VAX-RHO">Cold-Chain Vaccine Lot-X</option>
+                        <option value="SKU-IND-CHEM-LUB9">Castrol Heavy Grease 20L</option>
+                        <option value="SKU-FMCG-OLIV-500ML">Extra Virgin Olive Oil 500ml</option>
+                        <option value="SKU-TECH-LAP-PRO16">Enterprise ProBook 16</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Expected Quantity (Units)</label>
+                    <input type="number" id="po-item-qty" class="input" value="50" min="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-create-po')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitPOCreate()">Create Purchase Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: INBOUND RECEIVE DOCK -->
+    <div id="modal-receive-dock" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">📦 Inbound Receiving Dock</div>
+                    <span class="text-xs text-muted">Supplier: <strong id="receive-po-supplier"></strong></span>
+                </div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-receive-dock')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="receive-po-id">
+                <div class="mb-3">
+                    <label class="label">Select Line Item on PO</label>
+                    <select id="receive-sku-select" class="select"></select>
+                </div>
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Good Received Qty</label>
+                        <input type="number" id="receive-good-qty" class="input" value="10" min="0">
+                        <span class="text-xs text-muted">Routes to Staging for Put-Away</span>
+                    </div>
+                    <div>
+                        <label class="label">Damaged / Rejected Qty</label>
+                        <input type="number" id="receive-damaged-qty" class="input" value="0" min="0">
+                        <span class="text-xs text-muted">Routes to Quarantine Bay</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-receive-dock')">Cancel</button>
+                <button class="btn btn-success" onclick="WOS_UI.submitReceiveItem()">✓ Complete Goods Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE OUTBOUND ORDER -->
+    <div id="modal-create-order" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">📋 Create Outbound Customer Order</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-create-order')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="label">Customer Name</label>
+                    <input type="text" id="ord-customer" class="input" placeholder="e.g. Lagos University Teaching Hospital">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Destination Address</label>
+                    <input type="text" id="ord-destination" class="input" placeholder="e.g. Idi-Araba, Surulere, Lagos">
+                </div>
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Product SKU</label>
+                        <select id="ord-sku" class="select">
+                            <option value="SKU-SOLAR-INV-5KW">SolarEdge Hybrid Inverter 5KVA</option>
+                            <option value="SKU-LITH-BAT-48V">Pylontech Lithium Battery 3.5kWh</option>
+                            <option value="SKU-PHARM-VAX-RHO">Cold-Chain Vaccine Lot-X</option>
+                            <option value="SKU-IND-CHEM-LUB9">Castrol Heavy Grease 20L</option>
+                            <option value="SKU-FMCG-OLIV-500ML">Extra Virgin Olive Oil 500ml</option>
+                            <option value="SKU-TECH-LAP-PRO16">Enterprise ProBook 16</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label">Quantity</label>
+                        <input type="number" id="ord-qty" class="input" value="5" min="1">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Designated Courier Carrier</label>
+                    <select id="ord-courier" class="select">
+                        <option value="GIG Logistics">GIG Logistics</option>
+                        <option value="DHL Express Cold-Chain">DHL Express Cold-Chain</option>
+                        <option value="FedEx Freight">FedEx Freight</option>
+                        <option value="Apex Internal Fleet Van 04">Apex Internal Fleet Van 04</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-create-order')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitOrderCreate()">Allocate Order & Queue Picks</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PACK ORDER -->
+    <div id="modal-pack-order" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">📦 Packing & Weight Verification</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-pack-order')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pack-order-id">
+                <div class="mb-3">
+                    <label class="label">Packaging Container</label>
+                    <select id="pack-box-type" class="select">
+                        <option value="Heavy Duty Double-Wall Corrugated Carton">Heavy Duty Double-Wall Corrugated Carton</option>
+                        <option value="Insulated Cold-Chain Reefer Shipper (Dry Ice)">Insulated Cold-Chain Reefer Shipper (Dry Ice)</option>
+                        <option value="Wooden Industrial Pallet Crating">Wooden Industrial Pallet Crating</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Verified Scale Weight (KG)</label>
+                    <input type="number" step="0.1" id="pack-weight" class="input" value="14.2">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-pack-order')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitPackOrder()">Seal Package & Complete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AUTHORIZE DISPATCH -->
+    <div id="modal-authorize-dispatch" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">🚚 Final Dispatch Gate Release</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-authorize-dispatch')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="dispatch-auth-order-id">
+                <div class="alert alert-info mb-3">
+                    <div class="alert-icon">🛡️</div>
+                    <div class="text-xs">
+                        Consignee: <strong id="dispatch-auth-customer"></strong><br>
+                        Authorizing will release stock from warehouse inventory and stamp the gate pass.
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Courier Logistics Partner</label>
+                    <input type="text" id="dispatch-auth-courier" class="input">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Air Waybill / Tracking Number</label>
+                    <input type="text" id="dispatch-auth-tracking" class="input" placeholder="e.g. GIG-LG-99302">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-authorize-dispatch')">Cancel</button>
+                <button class="btn btn-success" onclick="WOS_UI.submitAuthorizeDispatch()">✓ Authorize Gate Release</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RETURN INTAKE -->
+    <div id="modal-return-intake" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">🔄 Reverse Logistics RMA Return Intake</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-return-intake')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="label">Original Order Number</label>
+                    <input type="text" id="rma-order-id" class="input" value="ORD-NG-2026-768">
+                </div>
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Returned SKU</label>
+                        <select id="rma-sku" class="select">
+                            <option value="SKU-FMCG-OLIV-500ML">Extra Virgin Olive Oil 500ml</option>
+                            <option value="SKU-SOLAR-INV-5KW">SolarEdge Hybrid Inverter 5KVA</option>
+                            <option value="SKU-TECH-LAP-PRO16">Enterprise ProBook 16</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label">Returned Quantity</label>
+                        <input type="number" id="rma-qty" class="input" value="2" min="1">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Return Reason</label>
+                    <select id="rma-reason" class="select">
+                        <option value="Customer Damaged Packaging">Customer Damaged Packaging</option>
+                        <option value="Wrong Item Shipped">Wrong Item Shipped</option>
+                        <option value="Defective Unit">Defective Unit</option>
+                        <option value="Order Cancelled Post-Transit">Order Cancelled Post-Transit</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Quality Inspection Triage</label>
+                    <select id="rma-triage" class="select">
+                        <option value="Restocked">Passed Inspection ➔ Restock into Active Bin</option>
+                        <option value="Quarantined" selected>Damaged / Uninspected ➔ Route to Quarantine Bay</option>
+                        <option value="Disposed">Write-Off / Hazardous ➔ Disposal Bay</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Inspector Notes</label>
+                    <textarea id="rma-notes" class="input" rows="2" placeholder="Visual inspection notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-return-intake')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitReturnIntake()">Process RMA Return</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT COMPANY PROFILE -->
+    <div id="modal-edit-company" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">🏢 Edit Company Tenant Settings</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-edit-company')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="label">Company Name</label>
+                    <input type="text" id="comp-name" class="input" value="Apex Global Supply Chain Ltd.">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Legal Entity</label>
+                    <input type="text" id="comp-legal" class="input" value="Apex Holdings LLC">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Physical HQ Address</label>
+                    <input type="text" id="comp-addr" class="input" value="Plot 14 Commercial Avenue, Victoria Island, Lagos, Nigeria">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Executive Contact Email</label>
+                    <input type="email" id="comp-email" class="input" value="ops-lead@apexlogistics.com">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-edit-company')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitCompanyEdit()">Save Company Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD REGIONAL BRANCH -->
+    <div id="modal-add-branch" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">🌿 Add Regional Distribution Branch</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-add-branch')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="label">Branch Name</label>
+                    <input type="text" id="branch-name" class="input" placeholder="e.g. Kano Northern Logistics Hub">
+                </div>
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Branch Code</label>
+                        <input type="text" id="branch-code" class="input" placeholder="e.g. KAN-HUB">
+                    </div>
+                    <div>
+                        <label class="label">City</label>
+                        <input type="text" id="branch-city" class="input" placeholder="e.g. Kano">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Geographic Region</label>
+                    <input type="text" id="branch-region" class="input" placeholder="e.g. North-West Nigeria">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Designated Branch Manager</label>
+                    <input type="text" id="branch-manager" class="input" placeholder="e.g. Aminu Bello">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-add-branch')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitBranchAdd()">Create Branch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD WAREHOUSE -->
+    <div id="modal-add-warehouse" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">🏭 Provision New Physical Warehouse</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-add-warehouse')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="label">Warehouse Name</label>
+                    <input type="text" id="wh-name" class="input" placeholder="e.g. Lekki Free Zone Depot">
+                </div>
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Parent Branch</label>
+                        <select id="wh-branch" class="select">
+                            <option value="BR-LOS">Lagos Coastal Distribution Hub</option>
+                            <option value="BR-ABJ">Abuja Central Fulfillment Depot</option>
+                            <option value="BR-PHC">Port Harcourt Maritime Gateway</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label">Facility Type</label>
+                        <select id="wh-type" class="select">
+                            <option value="Regional Distribution Center">Regional Distribution Center</option>
+                            <option value="Cold Storage & Reefer Facility">Cold Storage & Reefer Facility</option>
+                            <option value="Hazardous & Chemical Depot">Hazardous & Chemical Depot</option>
+                            <option value="Cross-Dock Staging Hub">Cross-Dock Staging Hub</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Storage Unit Capacity</label>
+                    <input type="number" id="wh-cap" class="input" value="3000" min="500">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-add-warehouse')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitWarehouseAdd()">Provision Warehouse</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD USER -->
+    <div id="modal-add-user" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">👥 Invite Operator & Assign Scope</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-add-user')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="label">Full Name</label>
+                    <input type="text" id="usr-name" class="input" placeholder="e.g. Zainab Haruna">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Corporate Email</label>
+                    <input type="email" id="usr-email" class="input" placeholder="z.haruna@apexlogistics.com">
+                </div>
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Role Assignment</label>
+                        <select id="usr-role" class="select">
+                            <option value="officer">Warehouse Officer (Floor Execution)</option>
+                            <option value="supervisor">Warehouse Supervisor (Authorizations)</option>
+                            <option value="manager">Operations Manager (Cross-Facility)</option>
+                            <option value="finance">Finance & Billing Controller</option>
+                            <option value="admin">System Administrator</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label">Approval Limit (₦)</label>
+                        <input type="number" id="usr-limit" class="input" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-add-user')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitUserAdd()">Invite User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD SKU / PRODUCT -->
+    <div id="modal-add-product" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">📦 Add Master SKU Catalog Item</div>
+                <button class="modal-close-btn" onclick="WOS_UI.closeModal('modal-add-product')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Product SKU</label>
+                        <input type="text" id="prod-sku" class="input" placeholder="e.g. SKU-ENERGY-PANEL-450W">
+                    </div>
+                    <div>
+                        <label class="label">Storage Requirement</label>
+                        <select id="prod-storage" class="select">
+                            <option value="Standard">Standard Ambient Storage</option>
+                            <option value="Cold">Cold-Chain (2°C - 8°C)</option>
+                            <option value="Hazardous">Hazardous & Flammable</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="label">Item Name / Description</label>
+                    <input type="text" id="prod-name" class="input" placeholder="e.g. Mono-Crystalline Solar Panel 450W">
+                </div>
+                <div class="mb-3">
+                    <label class="label">Category</label>
+                    <input type="text" id="prod-category" class="input" placeholder="e.g. Renewable Energy">
+                </div>
+                <div class="grid-2-col mb-3">
+                    <div>
+                        <label class="label">Cost Value (₦)</label>
+                        <input type="number" id="prod-cost" class="input" value="85000">
+                    </div>
+                    <div>
+                        <label class="label">Selling Price (₦)</label>
+                        <input type="number" id="prod-price" class="input" value="120000">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-add-product')">Cancel</button>
+                <button class="btn btn-primary" onclick="WOS_UI.submitProductAdd()">Save Master SKU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SUPABASE CLOUD CONNECTION & DATA MANAGER -->
+    <div class="modal-overlay" id="modal-supabase-sync">
+        <div class="modal" style="max-width: 680px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">☁️ Supabase PostgreSQL Cloud Hub</h3>
+                    <p class="text-xs text-muted">Cloud database integration for real-time inventory, audit trail, and zero-trust sync.</p>
+                </div>
+                <button class="modal-close" onclick="WOS_UI.closeModal('modal-supabase-sync')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="card p-3 mb-3" style="background-color: var(--slate-900); border: 1px solid var(--slate-700); color: #fff;">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-muted uppercase">Connected Endpoint</span>
+                        <span id="supabase-modal-badge" class="badge badge-emerald">CLOUD READY</span>
+                    </div>
+                    <div class="text-sm font-mono text-indigo-400 mb-1">https://rywfmocrdpygovckkarv.supabase.co</div>
+                    <div class="text-xs text-muted font-mono">Key: sb_publishable_RnXmOfUXRS...vXPD_JV</div>
+                </div>
+
+                <div class="grid-3-col mb-4">
+                    <button class="btn btn-primary btn-sm" onclick="WOS_UI.testSupabaseConnectionUI()">
+                        ⚡ Test Cloud Ping
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="WOS_UI.pushToSupabaseUI()">
+                        ⬆️ Push Local Data
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="WOS_UI.pullFromSupabaseUI()">
+                        ⬇️ Pull from Cloud
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="label">Live Sync & Connectivity Output</label>
+                    <div id="supabase-log-output" class="font-mono text-xs p-3 rounded" style="background: var(--slate-950); color: #a5f3fc; border: 1px solid var(--slate-800); min-height: 80px; max-height: 140px; overflow-y: auto;">
+                        Click "Test Cloud Ping" to verify Supabase REST API connection...
+                    </div>
+                </div>
+
+                <div class="card p-3" style="background-color: var(--slate-50); border: 1px solid var(--slate-200);">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold text-slate-700">Database Schema Setup (20 Tables + RLS)</span>
+                        <a href="https://supabase.com/dashboard/project/rywfmocrdpygovckkarv/sql" target="_blank" class="text-xs text-indigo-600 hover:underline">
+                            Open Supabase SQL Editor ↗
+                        </a>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">
+                        Execute the pre-built <code>supabase_setup.sql</code> in your Supabase dashboard to create all 20 tables with permissive RLS policies and demo seed data in 1 click.
+                    </p>
+                    <button class="btn btn-sm btn-outline" onclick="WOS_UI.copySupabaseSQL()">
+                        📋 Copy SQL Migration Script
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="WOS_UI.closeModal('modal-supabase-sync')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/wos-data.js"></script>
+    <script src="js/wos-rbac.js"></script>
+    <script src="js/wos-modules.js"></script>
+    <script src="js/wos-ui.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

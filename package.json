@@ -1,0 +1,25 @@
+{
+  "name": "warehouse-operating-system",
+  "version": "1.0.0",
+  "description": "Enterprise Cloud-Based Warehouse Operating System (WOS) with First-Class RBAC, Cryptographic Audit Trail, and Real-Time Inventory Control",
+  "main": "db.js",
+  "scripts": {
+    "db:setup": "psql -d wos_enterprise_db -f schema.sql -f seed.sql",
+    "db:test": "node -e \"require('dotenv').config(); require('./db').testConnection().then(console.log).catch(console.error)\""
+  },
+  "keywords": [
+    "warehouse",
+    "wms",
+    "operating-system",
+    "logistics",
+    "rbac",
+    "audit-trail",
+    "postgresql"
+  ],
+  "author": "Apex Logistics Group",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1"
+  }
+}
